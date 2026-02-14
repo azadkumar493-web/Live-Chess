@@ -5,7 +5,7 @@ import {
   Trophy, RotateCcw, Users, Cpu, AlertCircle, 
   BrainCircuit, Settings, Info, Globe, Shield, Zap, Search,
   Mail, Facebook, Instagram, LogIn, Loader2, BookOpen,
-  Wifi, Radio, User, Share2
+  Wifi, Radio, User, Share2, Lock, LogOut, Key
 } from 'lucide-react';
 import { GameMode, GameState, PlayerColor, AnalysisMessage, Player } from './types';
 import { analyzeBoard, getBestMove, generateSpectatorChat, analyzeOpponentStrategy } from './services/geminiService';
@@ -27,7 +27,12 @@ const App: React.FC = () => {
   const [isAuthenticating, setIsAuthenticating] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
+  // Login Form State
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
   const [userProfile, setUserProfile] = useState<Player>({ name: 'Guest_Grandmaster', rating: 1200 });
   const [opponent, setOpponent] = useState<Player | null>(null);
 
@@ -53,7 +58,7 @@ const App: React.FC = () => {
   });
   
   const [analysis, setAnalysis] = useState<AnalysisMessage[]>([
-    { role: 'system', text: 'Connecting to Grandmaster Live clusters...', timestamp: Date.now() }
+    { role: 'system', text: 'Connecting to Live Chess clusters...', timestamp: Date.now() }
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
@@ -177,8 +182,51 @@ const App: React.FC = () => {
         rating: 1450,
         avatar: provider.toLowerCase()
       });
+      setIsLoggedIn(true);
       addAnalysis(`Successfully authenticated via ${provider}. Welcome back!`, 'system');
     }, 1500);
+  };
+
+  const handleManualLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username || !password) {
+      alert("Please enter both ID and Password.");
+      return;
+    }
+    
+    setIsAuthenticating('manual');
+    setTimeout(() => {
+      setIsAuthenticating(null);
+      setUserProfile({
+        name: username,
+        rating: 1600 + Math.floor(Math.random() * 400),
+      });
+      setIsLoggedIn(true);
+      addAnalysis(`Secure login verified for ${username}.`, 'system');
+    }, 1500);
+  };
+
+  const handleGuestLogin = () => {
+    setIsAuthenticating('guest');
+    setTimeout(() => {
+      setIsAuthenticating(null);
+      const guestId = Math.floor(Math.random() * 10000);
+      const guestName = `Guest_GM_${guestId}`;
+      setUsername(guestName); // Sync username state
+      setUserProfile({
+        name: guestName,
+        rating: 1000,
+      });
+      setIsLoggedIn(true);
+      addAnalysis(`Temporary guest access granted to ${guestName}.`, 'system');
+    }, 800);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserProfile({ name: 'Guest_Grandmaster', rating: 1200 });
+    setUsername('');
+    setPassword('');
   };
 
   const startMatch = (mode: GameMode) => {
@@ -219,7 +267,7 @@ const App: React.FC = () => {
   const handleShareMatch = async () => {
     const shareData = {
       title: 'Watch my Chess Match',
-      text: `I'm playing a match on Grandmaster Live! FEN: ${gameState.fen}`,
+      text: `I'm playing a match on Live Chess! FEN: ${gameState.fen}`,
       url: window.location.href,
     };
     if (navigator.share) {
@@ -242,72 +290,151 @@ const App: React.FC = () => {
         <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} selectedMode={gameState.mode} />
 
         <div className="max-w-md w-full space-y-10 text-center my-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          <div className="relative inline-flex mb-4">
-             <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 glow-effect" />
-             <div className="relative p-6 bg-indigo-600 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(79,70,229,0.5)] transform hover:scale-105 transition-transform duration-500">
-               <Trophy size={64} className="text-white" />
+          {/* Logo Section */}
+          <div className="relative inline-flex mb-4 group cursor-pointer">
+             <div className="absolute inset-0 bg-amber-500 blur-3xl opacity-20 glow-effect group-hover:opacity-40 transition-opacity duration-500" />
+             <div className="relative p-1 bg-gradient-to-br from-amber-500/20 to-black rounded-[2.5rem] border border-amber-500/30 shadow-[0_20px_60px_-15px_rgba(245,158,11,0.3)] transform hover:scale-105 transition-transform duration-500 overflow-hidden">
+               <img 
+                 src="https://images.unsplash.com/photo-1586165368502-1bad197a6461?auto=format&fit=crop&q=80&w=400" 
+                 alt="Grandmaster King" 
+                 className="w-32 h-32 object-cover rounded-[2.2rem]" 
+               />
+               <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-[2.5rem]" />
              </div>
           </div>
           
           <div>
-            <h1 className="text-6xl font-[900] tracking-tighter text-white mb-3">GM LIVE</h1>
+            <h1 className="text-6xl font-[900] tracking-tighter text-white mb-3">Live Chess</h1>
+            <div className="flex flex-col items-center gap-2 mb-4">
+                <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-black tracking-widest uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                  💯% Secure, Win Guarantee✅
+                </span>
+            </div>
             <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">Full HD Live Interaction • AI Analysis • Global Arena</p>
           </div>
 
-          <div className="glass-panel p-10 rounded-[3rem] space-y-8 shadow-2xl border border-white/5">
-            <div className="space-y-5">
-              <label className="text-[10px] font-[900] text-zinc-500 uppercase tracking-[0.3em]">Identity Hub</label>
-              <div className="grid grid-cols-3 gap-4">
-                <button onClick={() => handleSocialLogin('Google')} disabled={!!isAuthenticating} className="flex items-center justify-center p-5 bg-white/95 hover:bg-white text-black rounded-3xl transition-all shadow-xl active:scale-90 disabled:opacity-50">
-                  {isAuthenticating === 'Google' ? <Loader2 className="animate-spin" size={24}/> : <Mail size={24} />}
-                </button>
-                <button onClick={() => handleSocialLogin('Facebook')} disabled={!!isAuthenticating} className="flex items-center justify-center p-5 bg-[#1877F2] hover:brightness-110 text-white rounded-3xl transition-all shadow-xl active:scale-90 disabled:opacity-50">
-                  {isAuthenticating === 'Facebook' ? <Loader2 className="animate-spin" size={24}/> : <Facebook size={24} />}
-                </button>
-                <button onClick={() => handleSocialLogin('Instagram')} disabled={!!isAuthenticating} className="flex items-center justify-center p-5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white rounded-3xl transition-all shadow-xl active:scale-90 disabled:opacity-50">
-                  {isAuthenticating === 'Instagram' ? <Loader2 className="animate-spin" size={24}/> : <Instagram size={24} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/5"></span></div>
-              <div className="relative flex justify-center"><span className="bg-[#0f0f14] px-4 text-zinc-600 font-bold text-[10px] uppercase tracking-widest">or entry manual</span></div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="relative group">
-                <input type="text" value={userProfile.name} onChange={(e) => setUserProfile({...userProfile, name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold placeholder-zinc-700" placeholder="Enter Call Sign..." />
-                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" size={20} />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 pt-2">
-                <button disabled={isSearching || !!isAuthenticating} onClick={() => startMatch(GameMode.PvP_Online)} className="group relative overflow-hidden flex items-center justify-center gap-4 w-full p-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-3xl font-[900] text-lg transition-all shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] disabled:opacity-50 active:scale-[0.98]">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  {isSearching ? <Loader2 className="animate-spin" /> : <Globe size={24} />}
-                  <span className="tracking-tight">{isSearching ? 'SCANNING RADIUS...' : 'ENTER GLOBAL ARENA'}</span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <button onClick={() => startMatch(GameMode.PvAI)} className="flex flex-col items-center justify-center gap-3 p-5 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-[2rem] border border-white/5 transition-all hover:border-indigo-500/30">
-                    <Cpu size={28} className="text-indigo-400" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Neural Link</span>
-                  </button>
-                  <button onClick={() => startMatch(GameMode.PvP_Local)} className="flex flex-col items-center justify-center gap-3 p-5 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-[2rem] border border-white/5 transition-all hover:border-zinc-500/30">
-                    <Users size={28} className="text-zinc-400" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Local Intel</span>
-                  </button>
-                </div>
-                
-                <div className="py-4">
-                  <ShareActions />
+          <div className="glass-panel p-8 rounded-[3rem] space-y-8 shadow-2xl border border-white/5 relative overflow-hidden">
+            {!isLoggedIn ? (
+              /* LOGIN FORM */
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="space-y-5">
+                  <label className="text-[10px] font-[900] text-zinc-500 uppercase tracking-[0.3em]">Quick Identity Hub</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <button onClick={() => handleSocialLogin('Google')} disabled={!!isAuthenticating} className="flex items-center justify-center p-5 bg-white/95 hover:bg-white text-black rounded-3xl transition-all shadow-xl active:scale-90 disabled:opacity-50">
+                      {isAuthenticating === 'Google' ? <Loader2 className="animate-spin" size={24}/> : <Mail size={24} />}
+                    </button>
+                    <button onClick={() => handleSocialLogin('Facebook')} disabled={!!isAuthenticating} className="flex items-center justify-center p-5 bg-[#1877F2] hover:brightness-110 text-white rounded-3xl transition-all shadow-xl active:scale-90 disabled:opacity-50">
+                      {isAuthenticating === 'Facebook' ? <Loader2 className="animate-spin" size={24}/> : <Facebook size={24} />}
+                    </button>
+                    <button onClick={() => handleSocialLogin('Instagram')} disabled={!!isAuthenticating} className="flex items-center justify-center p-5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white rounded-3xl transition-all shadow-xl active:scale-90 disabled:opacity-50">
+                      {isAuthenticating === 'Instagram' ? <Loader2 className="animate-spin" size={24}/> : <Instagram size={24} />}
+                    </button>
+                  </div>
                 </div>
 
-                <button onClick={() => setIsRulesOpen(true)} className="flex items-center justify-center gap-2 text-[10px] font-black text-zinc-500 uppercase hover:text-indigo-400 transition-colors tracking-widest pt-2">
-                  <BookOpen size={14} /> MANUALS & LOGS
-                </button>
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/5"></span></div>
+                  <div className="relative flex justify-center"><span className="bg-[#0f0f14] px-4 text-zinc-600 font-bold text-[10px] uppercase tracking-widest">or secure login</span></div>
+                </div>
+
+                <form onSubmit={handleManualLogin} className="space-y-4">
+                  <div className="relative group">
+                    <input 
+                      type="text" 
+                      value={username} 
+                      onChange={(e) => setUsername(e.target.value)} 
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold placeholder-zinc-700" 
+                      placeholder="User ID / Email"
+                      required
+                    />
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                  </div>
+                  <div className="relative group">
+                    <input 
+                      type="password" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold placeholder-zinc-700" 
+                      placeholder="Password"
+                      required
+                    />
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                  </div>
+                  
+                  <div className="pt-2 flex flex-col gap-3">
+                    <button 
+                      type="submit" 
+                      disabled={!!isAuthenticating} 
+                      className="group relative overflow-hidden flex items-center justify-center gap-3 w-full p-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-[900] text-base transition-all shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] disabled:opacity-50 active:scale-[0.98]"
+                    >
+                      {isAuthenticating === 'manual' ? <Loader2 className="animate-spin" size={20} /> : <Key size={20} />}
+                      <span className="tracking-tight uppercase">Secure Login</span>
+                    </button>
+                    
+                    <button 
+                      type="button" 
+                      onClick={handleGuestLogin}
+                      disabled={!!isAuthenticating}
+                      className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                    >
+                      {isAuthenticating === 'guest' ? 'Accessing...' : 'Continue as Guest'}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </div>
+            ) : (
+              /* LOGGED IN DASHBOARD */
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-3xl border border-white/5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg">
+                      {userProfile.avatar ? <Zap size={20}/> : userProfile.name.charAt(0)}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-black text-white">{userProfile.name}</div>
+                      <div className="text-[10px] font-bold text-zinc-500 uppercase flex items-center gap-1">
+                        <Shield size={10} className="text-emerald-500" /> Authorized • Rank {userProfile.rating}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={handleLogout} className="p-3 hover:bg-white/10 rounded-xl text-zinc-500 hover:text-red-400 transition-colors">
+                    <LogOut size={20} />
+                  </button>
+                </div>
+
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/5"></span></div>
+                  <div className="relative flex justify-center"><span className="bg-[#0f0f14] px-4 text-zinc-600 font-bold text-[10px] uppercase tracking-widest">Select Operation</span></div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <button disabled={isSearching} onClick={() => startMatch(GameMode.PvP_Online)} className="group relative overflow-hidden flex items-center justify-center gap-4 w-full p-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-3xl font-[900] text-lg transition-all shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] disabled:opacity-50 active:scale-[0.98]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    {isSearching ? <Loader2 className="animate-spin" /> : <Globe size={24} />}
+                    <span className="tracking-tight">{isSearching ? 'SCANNING RADIUS...' : 'ENTER GLOBAL ARENA'}</span>
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => startMatch(GameMode.PvAI)} className="flex flex-col items-center justify-center gap-3 p-5 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-[2rem] border border-white/5 transition-all hover:border-indigo-500/30">
+                      <Cpu size={28} className="text-indigo-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Neural Link</span>
+                    </button>
+                    <button onClick={() => startMatch(GameMode.PvP_Local)} className="flex flex-col items-center justify-center gap-3 p-5 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-[2rem] border border-white/5 transition-all hover:border-zinc-500/30">
+                      <Users size={28} className="text-zinc-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Local Intel</span>
+                    </button>
+                  </div>
+                  
+                  <div className="py-2">
+                    <ShareActions />
+                  </div>
+
+                  <button onClick={() => setIsRulesOpen(true)} className="flex items-center justify-center gap-2 text-[10px] font-black text-zinc-500 uppercase hover:text-indigo-400 transition-colors tracking-widest">
+                    <BookOpen size={14} /> MANUALS & LOGS
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center justify-center gap-10 text-zinc-700 pt-4">

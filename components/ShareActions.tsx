@@ -15,7 +15,7 @@ const ShareActions: React.FC = () => {
 
   const handleShare = async () => {
     const shareData = {
-      title: 'Grandmaster Live Chess',
+      title: 'Live Chess',
       text: 'Challenge me to a game of elite chess with real-time Gemini AI analysis!',
       url: window.location.href,
     };

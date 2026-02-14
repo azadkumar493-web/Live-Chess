@@ -1,6 +1,6 @@
 {
-  "name": "Copy of Grandmaster Live",
-  "description": "A professional-grade live chess platform with real-time AI analysis, multiple game modes (Local PvP and AI), and live grandmaster commentary powered by Gemini.",
+  "name": "Live Chess",
+  "description": "💯% Secure, Win Guarantee✅ - A professional-grade live chess platform with real-time AI analysis, multiple game modes (Local PvP and AI), and live grandmaster commentary powered by Gemini.",
   "requestFramePermissions": [
     "camera",
     "microphone"
